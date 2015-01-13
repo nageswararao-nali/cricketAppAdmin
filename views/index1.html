@@ -1,0 +1,106 @@
+<html>
+<head>
+	<script type="text/javascript" src="/socket.io/socket.io.js"></script>
+	<script type="text/javascript" src="/scripts/js/jquery-1.11.1.min.js"></script>
+	<style>
+		#test{
+			width: 800px;
+			padding-left: 150px;
+		}
+		.score_board{
+			width:100%;
+		}
+		.bowler_score_board{
+			width:100%;
+			margin-top:30px;
+		}
+	</style>
+	<script>
+	$(document).ready(function(){
+		var loc = window.location.href.split("/");
+		// var loc1 = loc[3]+'/'+loc[4];
+		var locc = loc[4];
+		// console.log(locc);
+		// console.log("---" + loc + "---")
+		var socket = io.connect("54.169.218.153:3003");
+		// socket.emit("sub","");
+		/*$("#form_sub").submit(function(e){
+			e.preventDefault();
+			var message = {
+				msg : $("#chat_text").val()
+			};
+			$("#chat_text").val('')
+			socket.emit("chating",message)
+
+		})
+		socket.on("chat",function(msg){
+				$("#test").append(msg.msg);
+			})*/
+// socket.emit("getFantasyPoints",189018);
+socket.on("fantasyPoints",function(fPoints){
+	console.log("welcome home")
+	console.log(fPoints)
+	var li = "";
+	for(var i=0;i<fPoints.length;i++){
+		li = li + "<li>" + fPoints[i].playerName + " --> " + fPoints[i].points + "</li>";
+	}
+	$("#fp").html(li);
+})
+		socket.on("scoreboard",function(scor_info){
+			/*for(var prop in scor_info){
+				console.log(prop + " ==== " + scor_info[prop])
+				// $("#test").html('<p>' + msg + '</p>');
+			}*/
+			console.log(scor_info.matchId)
+			socket.emit("getFantasyPoints",scor_info.matchId)
+			$("#test").html('<p>' + scor_info.match_name + '</p>')
+			var table = '<table class="score_board">'
+			var tr = "<tr><td colspan=2>Batting</td><td>R</td><td>M</td><td>B</td><td>4s</td><td>6s</td><td>SR</td></tr>";
+			for(var prop in scor_info.batting_info.batsman_info){
+				console.log(prop + " ==== " + scor_info.batting_info.batsman_info[prop])
+				tr = tr + '<tr><td>' + scor_info.batting_info.batsman_info[prop].playerName + '</td>';
+				for(var lprop in scor_info.batting_info.batsman_info[prop].batsman_batting_info){
+					console.log(lprop + " ====== " + scor_info.batting_info.batsman_info[prop].batsman_batting_info[lprop])
+					tr = tr + '<td>' +  scor_info.batting_info.batsman_info[prop].batsman_batting_info[lprop] + '</td>';
+				}
+				tr = tr + '</tr>';
+			}
+			table = table + tr + '</table>';
+			$("#test").append(table);
+			var table = '<table class="bowler_score_board">'
+			var tr = "<tr><td>Bowling</td><td>O</td><td>M</td><td>R</td><td>W</td><td>Econ</td><td>0s</td><td>4s</td><td>6s</td></tr>";
+			for(var prop in scor_info.bowling_info.bowler_info){
+				console.log(prop + " ==== " + scor_info.bowling_info.bowler_info[prop])
+				tr = tr + '<tr><td>' + scor_info.bowling_info.bowler_info[prop].playerName + '</td>';
+				for(var lprop in scor_info.bowling_info.bowler_info[prop].bowler_bowling_info){
+					console.log(lprop + " ====== " + scor_info.bowling_info.bowler_info[prop].bowler_bowling_info[lprop])
+					tr = tr + '<td>' +  scor_info.bowling_info.bowler_info[prop].bowler_bowling_info[lprop] + '</td>';
+				}
+				tr = tr + '</tr>';
+			}
+			table = table + tr + '</table>';
+			$("#test").append(table);
+			})
+		  /*socket.on('news', function (data) {
+		    $("#test").html(data);
+		    //socket.emit('my other event', { my: 'data' });
+		  });
+		socket.on('welcome', function (data) {
+				    $("#test").append(data);
+				    //socket.emit('my other event', { my: 'data' });
+				  });*/
+			})
+		
+	</script>
+</head>
+	<body>
+		<h1> Recent Posts </h1>
+		<div id="test">Welcome</div>
+		<!-- <form id="form_sub" action="">
+			<textarea type="text" name="chat_text" id="chat_text"></textarea>
+			<input type="submit" name="chat_submit" value="Publish Post" id="chat_submit">
+		</form>
+ -->
+ 	<div id="fp"></div>
+	</body>
+</html>

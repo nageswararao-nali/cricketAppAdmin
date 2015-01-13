@@ -1,0 +1,29 @@
+<html>
+	<head>
+		<title>Cricketopia </title>
+		<link href="/scripts/css/style.css" rel="stylesheet">
+	</head>
+	<body>
+		<div class="header"><h2>Admin Login</h2></div>
+		<div class="header"> {{ status }}
+		<div class="loginForm">
+			<form id="loginForm" method="post" action="/">
+				<span class="loginFormFields">
+					User Name : 
+					<span style="margin-left:10px">
+						<input name="userName" value="admin">
+					</span>
+				</span>
+				<span class="loginFormFields">
+					password : 
+					<span style="margin-left:22px">
+						<input name="password" value="pass">
+					</span>
+				</span>
+				<span class="loginFormFields">
+					<input type="submit" name="submit" value="Submit">
+				</span>
+			</form>
+		</div>
+	</body>
+</html>

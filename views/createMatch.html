@@ -1,0 +1,149 @@
+<html>
+	<head>
+		<link href="/scripts/css/style.css" rel="stylesheet">
+		<script type="text/javascript" src="/socket.io/socket.io.js"></script>
+		<script type="text/javascript" src="/scripts/js/jquery-1.11.1.min.js"></script>
+		<script src="/scripts/js/jquery-ui.js"></script>
+        <link href="/scripts/css/jquery-ui.css" type="text/css" rel="stylesheet">
+		<script src="/scripts/js/jquery.datetimepicker.js"></script>
+        <link href="/scripts/css/jquery.datetimepicker.css" type="text/css" rel="stylesheet">
+        <script src="/scripts/js/jquery_validator.js"></script>
+		<script>
+		$(document).ready(function(){
+			var socket = io.connect("http://localhost:3000")
+			socket.emit("getAllTeams","");
+			socket.on("getAllTeams",function(teams){
+				var teamOptions = "";
+				var team1Content = '<select name="team1" id="team1" onChange="getTeamPlayers(this,1)"><option value="">--select match --</option>';
+				var team2Content = '<select name="team2" id="team2" onChange="getTeamPlayers(this,2)"><option value="">--select match --</option>';
+				for(var i=0;i<teams.length;i++){
+					teamOptions = teamOptions + '<option value="' + teams[i].teamId + '">' + teams[i].teamName  + '</option>'; 
+				}
+				teamOptions = teamOptions + "</select>"
+				team1Content = team1Content + teamOptions;
+				team2Content = team2Content + teamOptions;
+				$(".team1Dropdown").html(team1Content)
+				$(".team2Dropdown").html(team2Content)
+			})
+			socket.on("getTeamDetails",function(teamDetails){
+				var teamData = teamDetails.teamDetails;
+				var teamNo = teamDetails.teamNo;
+				var teamPlayerContent = "";
+				for(var j=0;j<teamData.length;j++){
+					teamPlayerContent = teamPlayerContent + '<div class="teamPlayers" ><input type="checkbox" id="team' + teamNo + 'Players[]" class="required" name="team' + teamNo + 'Players[]" value="' + teamData[j].playerId + '"> ' + teamData[j].playerName + '</div>';
+				}
+				$(".team" + teamNo + "Players").html(teamPlayerContent)
+			})
+			
+			$('.datepicker').val(new Date())
+			/*$('.datepicker').val(new Date)
+			$('.datepicker1').val(new Date)
+			$('.datepicker').datepicker()
+			$('.datepicker1').datepicker()*/
+			$('#datepicker').datetimepicker();
+			$('#datepicker1').datetimepicker();
+			$("#createMatch").validate({
+                rules: {
+                    team1Players: {
+                        required : true, 
+                    },
+                    datepicker : {required:true},
+                    datepicker1 : {required:true}
+                },
+                messages : {
+                    team1Players:{required:"select team1 players"}
+                }
+            })
+		})
+		var socket = io.connect("http://localhost:3000")
+		function getTeamPlayers(elm,teamNo){
+			socket.emit("getTeamDetails",{teamId : elm.value,teamNo:teamNo})
+		}
+		</script>
+	</head>
+	<body>
+		<div class="logOut" style="float:right"><a href="/logOut">LogOut</a></div>
+		<div class="header"><h2>Admin Login</h2></div>
+		<div class="leftSidebar">
+			<div class="menu_simple">
+				<ul>
+					<li><a href="/viewMatch">View Match</a></li>
+					<li><a href="/scoreboard">Scoreboard</a></li>
+					<li><a href="/manOfTheMatch">Man of the Match</a></li>
+					<li><a href="#">Match Cancellation</a></li>
+				</ul>
+			</div>
+		</div>
+		<div class="content">
+			<div class="topSide">
+				<h2>Create Match</h2>
+			</div>
+			<div class="middleContent">
+				<form method="post" action="/createMatch" id="createMatch" name="createMatch">
+					<div class="matchDetails">
+						<span class="matchDetailsData">
+							Match Type : 
+							<select name="mtype">
+								<option value="odi">ODI</option>
+								<option value="test">Test</option>
+								<option value="twenty20">Twenty20</option>
+							</select>
+						</span>
+						<span class="matchDetailsData">
+							Series Name : <input name="seriesName" value="">
+						</span>
+					</div>
+					<div class="matchDetails">
+						<span class="matchDetailsData">
+							Start Date : <input name="matchStartDate" class="datepicker required" id="datepicker">
+						</span>
+						<span class="matchDetailsData">
+							End Date : <input name="matchEndDate" class="datepicker required"  id="datepicker1">
+						</span>
+					</div>
+					<div class="matchDetails">
+						<div class="teamPlayersList">
+							<div class="teamPlayersListLeft">Team1 :</div>
+							<div class="teamPlayersListRight"> <span class="team1Dropdown"></span> </div>
+						</div>
+						<div class="teamPlayersList">
+							<div class="teamPlayersListLeft">Team1 :</div>
+							<div class="teamPlayersListRight"> <span class="team2Dropdown"></span> </div>
+						</div>
+					</div>
+					<div class="matchDetails">
+						<div class="teamPlayersList">
+							<div class="teamPlayersListLeft">players : </div>
+						 	<div class="teamPlayersListRight team1Players">
+						 		<!-- <div class="teamPlayers" >india</div>
+								<div class="teamPlayers">india</div>
+								<div class="teamPlayers">india</div>
+								<div class="teamPlayers">india</div>
+								<div class="teamPlayers">india</div>
+								<div class="teamPlayers">india</div>
+								<div class="teamPlayers">india</div>
+								<div class="teamPlayers">india</div> -->
+						 	</div>
+						 	
+						</div>
+						<div class="teamPlayersList">
+							<div class="teamPlayersListLeft">players :</div>
+						 	<div class="teamPlayersListRight team2Players">
+						 		<!-- <div class="teamPlayers" >india</div>
+								<div class="teamPlayers">india</div>
+								<div class="teamPlayers">india</div>
+								<div class="teamPlayers">india</div>
+								<div class="teamPlayers">india</div>
+								<div class="teamPlayers">india</div>
+								<div class="teamPlayers">india</div>
+								<div class="teamPlayers">india</div> -->
+						 	</div>
+						 	
+						</div>
+					</div>
+					<input type="submit" name="submit" value="Create">
+				</form>
+			</div>
+		</div>
+	</body>
+</html>

@@ -1,0 +1,66 @@
+.header,.loginForm{
+	text-align: center;
+}
+.loginFormFields{
+	width:100%;
+	float:left;
+	padding: 10px;
+}
+.leftSidebar{
+	width:20%;
+	float:left;
+}
+.content{
+	width:75%;
+	float:left;
+}
+.matchDetails{
+	width:100%;
+	float:left;
+	margin:10px 0px;
+}
+.matchDetailsData{
+	width: 32%;
+	float: left;
+}
+.teamPlayersList{
+	width:49%;
+	float:left;
+	margin-bottom: 10px
+}
+.teamPlayersListLeft{
+	width:15%;
+	float:left
+}
+.teamPlayersListRight{
+	width:84%;
+	float:left
+}
+.teamPlayers{
+	margin: 0px 0px 5px 0px;
+	color: blue;
+}
+/* menu bar */
+.menu_simple ul {
+	margin: 0;
+	padding: 0;
+	width:185px;
+	list-style-type: none;
+}
+.menu_simple ul li a {
+	text-decoration: none;
+	color: white;
+	padding: 10.5px 11px;
+	background-color: #005555;
+	display:block;
+}
+.menu_simple ul li a:visited {
+	color: white;
+}
+.menu_simple ul li{
+	border-bottom: solid 1px;
+}
+.menu_simple ul li a:hover, .menu_simple ul li .current {
+	color: white;
+	background-color: #5FD367;
+}

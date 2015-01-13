@@ -1,0 +1,101 @@
+<html>
+	<head>
+		<link href="/scripts/css/style.css" rel="stylesheet">
+		<script type="text/javascript" src="/socket.io/socket.io.js"></script>
+		<script type="text/javascript" src="/scripts/js/jquery-1.11.1.min.js"></script>
+		<script>
+		$(document).ready(function(){
+			var socket = io.connect("http://localhost:3000")
+			socket.emit("getMatches","");
+			socket.on("updateMOM",function(){
+				alert("Man of the Match Updated")
+			})
+			socket.on("getMom",function(player){
+				if(player.playerId)
+					$('input[type=radio][value=' + player.playerId + ']').attr('checked', true);
+			})
+			socket.on("getMatches",function(matches){
+				var matcheOptions = "";
+				var matchesContent = '<select name="match" id="matchList" onChange="getMatchDetails(this)"><option value="">--select match --</option>';
+				for(var i=0;i<matches.length;i++){
+					matcheOptions = matcheOptions + '<option value="' + matches[i].matchId + '">' + matches[i].matchId + ' ' + matches[i].team1.teamName + ' Vs ' + matches[i].team2.teamName + ' - ' + matches[i].mtype + '</option>'; 
+				}
+				matcheOptions = matcheOptions + '</select>';
+				matchesContent = matchesContent + matcheOptions;
+				$(".matches_dropdown").html(matchesContent)
+			})
+			socket.on("getMatchDetails",function(matchDetails){
+				socket.emit("getMom",{matchId:matchDetails.matchId})
+				var matchDetailContent = "";
+				var matchPrimaryData = matchSquadData = "";
+				var teams = Array();
+				teams.push(matchDetails.team1Id)
+				teams.push(matchDetails.team2Id)
+				matchPrimaryData = matchPrimaryData + '<div class="matchDetails"><span class="matchDetailsData">matchId : ' + matchDetails.matchId + '</span><span class="matchDetailsData">Match Name : ' + matchDetails.matchName + '</span><span class="matchDetailsData">Match Type : ' + matchDetails.mtype + '</span></div><div class="matchDetails"><span class="matchDetailsData">Start Date : ' + matchDetails.StartDate + '</span><span class="matchDetailsData">End Date : ' + matchDetails.EndDate + '</span><span class="matchDetailsData">Series Name : ' + matchDetails.seriesName + '</span></div> <div class="matchDetails"><div class="teamPlayersList"><div class="teamPlayersListLeft">Team1 :</div><div class="teamPlayersListRight"> ' + matchDetails.team1Name + ' </div></div><div class="teamPlayersList"><div class="teamPlayersListLeft">Team2 :</div><div class="teamPlayersListRight"> ' + matchDetails.team2Name + ' </div></div></div>';
+				matchSquadData = matchSquadData + '<div class="matchDetails">';
+				if(matchDetails.squadInfo){
+					for(var i=0;i<matchDetails.squadInfo.length;i++){
+						matchSquadData = matchSquadData + '<div class="teamPlayersList"><div class="teamPlayersListLeft">players :</div><div class="teamPlayersListRight">';
+						var teamIdName = "team" + teams[i];
+						for(var j=0;j<matchDetails.squadInfo[i][teamIdName].length;j++){
+							matchSquadData = matchSquadData + '<div class="teamPlayers" ><input name="manOfTheMatch" type="radio" value="' + matchDetails.squadInfo[i][teamIdName][j].playerId + '" onClick="getManOfTheMatch(this)">' + matchDetails.squadInfo[i][teamIdName][j].playerName + '</div>';
+							console.log(matchDetails.squadInfo[i][teamIdName][j])
+						}
+						matchSquadData = matchSquadData + '</div></div>';
+						
+					}
+				}else{
+					matchSquadData = matchSquadData + '<h2 style="color:red"> Squad Not Yet Announced </h2>'
+				}
+				
+				matchSquadData = matchSquadData + '</div>';
+				matchDetailContent = matchDetailContent + matchPrimaryData;
+				matchDetailContent = matchDetailContent + matchSquadData;
+				$(".middleContent").html(matchDetailContent);
+			})
+			$("#updateManOfTheMatch").click(function(){
+				var matchId = $("#matchList").val();
+				var mom = $("input[type='radio']:checked").val();
+				// window.location.assign("/createMatch")
+				// alert(mom)
+				socket.emit("updateMOM",{matchId:matchId,mom:mom});
+			})
+			
+		})
+		var socket = io.connect("http://localhost:3000")
+		function getMatchDetails(elm){
+			socket.emit("getMatchDetails",{matchId : elm.value})
+		}
+		function getManOfTheMatch(elm){
+			// alert(elm.value)
+		}
+		</script>
+	</head>
+	<body>
+		<div class="logOut" style="float:right"><a href="/logOut">LogOut</a></div>
+		<div class="header"><h2>Admin Login</h2></div>
+		<div class="leftSidebar">
+			<div class="menu_simple">
+				<ul>
+					<li><a href="/viewMatch">View Match</a></li>
+					<li><a href="/scoreboard">Scoreboard</a></li>
+					<li><a href="#">Man of the Match</a></li>
+					<li><a href="#">Match Cancellation</a></li>
+				</ul>
+			</div>
+		</div>
+		<div class="content">
+			<div class="topSide">
+				Select Match : 
+				<span class="matches_dropdown" style="margin-left:10px">
+				</span>
+				<span style="margin-left:80px">
+					<input type="button" name="updateManOfTheMatch" id="updateManOfTheMatch" value="Man Of The Match">
+				</span>
+			</div>
+			<div class="middleContent">
+				
+			</div>
+		</div>
+	</body>
+</html>

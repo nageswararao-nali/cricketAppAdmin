@@ -1,0 +1,50 @@
+<html>
+<head>
+	<script type="text/javascript" src="/socket.io/socket.io.js"></script>
+	<script type="text/javascript" src="/scripts/jquery-1.11.1.min.js"></script>
+	<script>
+	$(document).ready(function(){
+		var loc = window.location.href.split("/");
+		// var loc1 = loc[3]+'/'+loc[4];
+		var locc = loc[4];
+		// console.log(locc);
+		// console.log("---" + loc + "---")
+		var socket = io();
+		socket.emit("pub",locc);
+		$("#form_sub").submit(function(e){
+			e.preventDefault();
+			var message = {
+				msg : $("#chat_text").val()
+			};
+			$("#chat_text").val('')
+			socket.emit("chating",message)
+
+		})
+		socket.on("chat",function(msg){
+				$("#test").append(msg.msg);
+			})
+		socket.on("message",function(msg){
+				$("#test").append('<p>' + msg + '</p>');
+			})
+		  /*socket.on('news', function (data) {
+		    $("#test").html(data);
+		    //socket.emit('my other event', { my: 'data' });
+		  });
+		socket.on('welcome', function (data) {
+				    $("#test").append(data);
+				    //socket.emit('my other event', { my: 'data' });
+				  });*/
+			})
+		
+	</script>
+</head>
+	<body>
+		<h1> News Publish </h1>
+		<div id="test"></div>
+		<form id="form_sub" action="">
+			<input type="text" name="chat_text" id="chat_text">
+			<input type="submit" name="chat_submit" value="Publish News" id="chat_submit">
+		</form>
+
+	</body>
+</html>

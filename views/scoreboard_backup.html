@@ -1,0 +1,198 @@
+<html>
+	<head>
+		<link href="/scripts/css/style.css" rel="stylesheet">
+		<script type="text/javascript" src="/socket.io/socket.io.js"></script>
+		<script type="text/javascript" src="/scripts/js/jquery-1.11.1.min.js"></script>
+		<script>
+		var matchContent,matchId,teamNo;
+		$(document).ready(function(){
+			var socket = io.connect("http://localhost:3000")
+			socket.emit("getMatches","");
+			// var matchId = "{{ matchId }}";
+			// var teamNo = "{{ teamNo }}";
+			/*if(parseInt(matchId)){
+				socket.emit("getMatchDetails",{matchId : matchId})
+			}*/
+			
+			socket.on("getMatches",function(matches){
+				var matcheOptions = "";
+				var matchesContent = '<select name="match" id="matchList" onChange="getMatchDetails(this)"><option value="">--select match --</option>';
+				for(var i=0;i<matches.length;i++){
+					// if(matchId == matches[i].matchId){
+					// 	matcheOptions = matcheOptions + '<option value="' + matches[i].matchId + '" selected >' + matches[i].matchId + ' ' + matches[i].team1.teamName + ' Vs ' + matches[i].team2.teamName + ' - ' + matches[i].mtype + '</option>'; 
+					// }else{
+						matcheOptions = matcheOptions + '<option value="' + matches[i].matchId + '">' + matches[i].matchId + ' ' + matches[i].team1.teamName + ' Vs ' + matches[i].team2.teamName + ' - ' + matches[i].mtype + '</option>';
+					// }
+					 
+				}
+				matcheOptions = matcheOptions + '</select>';
+				matchesContent = matchesContent + matcheOptions;
+				$(".matches_dropdown").html(matchesContent)
+			})
+			socket.on("getMatchDetails",function(matchDetails){
+				matchId = matchDetails.matchId;
+				var matchDetailContent = "";
+				matchContent = matchDetails;
+				var matchPrimaryData = matchSquadData = "";
+				var teams = Array();
+				teams.push(matchDetails.team1Id)
+				teams.push(matchDetails.team2Id)
+				matchPrimaryData = matchPrimaryData + '<div class="matchDetails"><span class="matchDetailsData">matchId : ' + matchDetails.matchId + '</span><span class="matchDetailsData">Match Name : ' + matchDetails.matchName + '</span><span class="matchDetailsData">Match Type : ' + matchDetails.mtype + '</span></div><div class="matchDetails"><span class="matchDetailsData">Start Date : ' + matchDetails.StartDate + '</span><span class="matchDetailsData">End Date : ' + matchDetails.EndDate + '</span><span class="matchDetailsData">Series Name : ' + matchDetails.seriesName + '</span></div> <div class="matchDetails"><div class="teamPlayersList"><div class="teamPlayersListLeft">Team1 :</div><div class="teamPlayersListRight"> ' + matchDetails.team1Name + ' </div></div><div class="teamPlayersList"><div class="teamPlayersListLeft">Team2 :</div><div class="teamPlayersListRight"> ' + matchDetails.team2Name + ' </div></div></div>';
+				var team1S = team2S = "";
+				/*if(teamNo == matchDetails.team1Id.trim())
+					team1S = "selected"
+				if(teamNo == matchDetails.team2Id.trim())
+					team2S = "selected"*/
+				matchSquadData = matchSquadData + '<div class="matchDetails">Select Batting Team : <select onChange="getBat(this)"><option value="">--select --</option><option value="' +  matchDetails.team1Id + ' " ' + team1S + '>' + matchDetails.team1Name + '</option><option value="' + matchDetails.team2Id + '" ' + team2S + '>' + matchDetails.team2Name + '</option></select></div>';
+				
+				matchDetailContent = matchDetailContent + matchPrimaryData;
+				matchDetailContent = matchDetailContent + matchSquadData;
+				$(".middleContentTop").html('').html(matchDetailContent);
+				/*if(teamNo){
+					socket.emit("getScoreboard",{matchId:matchId})
+					// getScoreboardData(teamNo)
+				}*/
+				socket.on("getScoreboard",function(scoreboard){
+					console.log(scoreboard)
+					getScoreboardData(teamNo,scoreboard)
+				})
+			})
+			
+		})
+		var socket = io.connect("http://localhost:3000")
+		function getMatchDetails(elm){
+			$(".middleContentBottom").html('')
+			socket.emit("getMatchDetails",{matchId : elm.value})
+		}
+		function getBat(elm){
+			teamNo =  parseInt(elm.value);
+			if(teamNo){
+				socket.emit("getScoreboard",{matchId:matchId})
+				// getScoreboardData(teamNo)
+			}
+			// getScoreboardData(teamNo,null)
+		}
+		function getScoreboardData(team,scb){
+			team = parseInt(team)
+			var teamNo =  'team'+team;
+			var Scoreboard_content = '<form name="ScoreboardData" action="/scoreboard" method="post" id="ScoreboardData">';
+			var batinfo,ballinfo;
+			if(matchContent.squadInfo[0][teamNo] === undefined){
+				console.log("in if")
+				batinfo = matchContent.squadInfo[1]
+				ballinfo = matchContent.squadInfo[0]
+			}else{
+				console.log("in else")
+				batinfo = matchContent.squadInfo[0]
+				ballinfo = matchContent.squadInfo[1]
+			}
+			Scoreboard_content = Scoreboard_content + '<input type="hidden" name="matchId" value="' + matchContent.matchId + '"><input type="hidden" name="teamNo" value="' + team + '">';
+			
+			for(var prop in batinfo){
+				batingInfo = batinfo[prop];
+				var batting_table = '<h3>Batting</h3><div class="matchDetails"><table><tr><th>Player</th><th>Comment</th><th>Runs</th><th>Balls</th><th>4s</th><th>6s</th><th>Strike Rate</th><th>Batting</th><th>Runner</th></tr>';
+				for(var i=0;i<batingInfo.length;i++){
+					if(scb && batingInfo.length == scb.batting_info.batsman_info.length){
+						var batting_runner = batting_player = "";
+						if(scb.match_batting_runner == batingInfo[i].playerId)
+							batting_runner = "checked";
+						if(scb.match_batting_player == batingInfo[i].playerId)
+							batting_player = "checked";
+						batting_table = batting_table + '<tr><td>' + batingInfo[i].playerName + '<input type="hidden" name="battingPlayers[]" value="' + batingInfo[i].playerId + '"><input type="hidden" name="battingPlayerNames[]" value="' + batingInfo[i].playerName + '"></td><td><input type="text" class="matchScore" style="width:100px" name="comment[]" onChange="scoreChanged()" value="' + scb.batting_info.batsman_info[i].batsman_batting_info.Comment + '"></td><td><input type="text" class="matchScore" name="runs[]" onChange="scoreChanged()" value="' + scb.batting_info.batsman_info[i].batsman_batting_info.Runs + '"></td><td><input type="text" class="matchScore" name="balls[]" onChange="scoreChanged()" value="' + scb.batting_info.batsman_info[i].batsman_batting_info.Balls + '"></td><td><input type="text" class="matchScore" name="fours[]" onChange="scoreChanged()" value="' + scb.batting_info.batsman_info[i].batsman_batting_info.fours + '"></td><td><input type="text" class="matchScore" name="six[]" onChange="scoreChanged()" value="' + scb.batting_info.batsman_info[i].batsman_batting_info.sixes + '"></td><td><input type="text" class="matchScore" name="sr[]" onChange="scoreChanged()" value="' + scb.batting_info.batsman_info[i].batsman_batting_info.StrikeRate + '"></td><td><input type="radio" class="matchScore" name="batting" value="' + batingInfo[i].playerId + '" onChange="scoreChanged()" ' + batting_player + '></td><td><input type="radio" class="matchScore" name="runner" value="' + batingInfo[i].playerId + '" onChange="scoreChanged()" ' + batting_runner +'></td></tr>';
+							
+						
+					}else{
+						batting_table = batting_table + '<tr><td>' + batingInfo[i].playerName + '<input type="hidden" name="battingPlayers[]" value="' + batingInfo[i].playerId + '"><input type="hidden" name="battingPlayerNames[]" value="' + batingInfo[i].playerName + '"></td><td><input type="text" class="matchScore" style="width:100px" name="comment[]" onChange="scoreChanged()" vallue=""><select name="dd' + i +'"><option value="' + i + '">se</option></select><select name="pd' + i +'"><option value="' + i + '">se</option></select><select name="dd' + i +'"><option value="' + i + '">se</option></select><select name="pd' + i +'"><option value="' + i + '">se</option></select></td><td><input type="text" class="matchScore" name="runs[]" onChange="scoreChanged()" value="0"></td><td><input type="text" class="matchScore" name="balls[]" onChange="scoreChanged()" value="0"></td><td><input type="text" class="matchScore" name="fours[]" onChange="scoreChanged()" value="0"></td><td><input type="text" class="matchScore" name="six[]" onChange="scoreChanged()" value="0"></td><td><input type="text" class="matchScore" name="sr[]" onChange="scoreChanged()" value="0"></td><td><input type="radio" class="matchScore" name="batting" value="' + batingInfo[i].playerId + '" onChange="scoreChanged()"></td><td><input type="radio" class="matchScore" name="runner" value="' + batingInfo[i].playerId + '" onChange="scoreChanged()"></td></tr>';
+					}
+				}
+				if(scb && batingInfo.length == scb.batting_info.batsman_info.length){
+					batting_table = batting_table + '<tr><td>Extras</td><td><input name="extra_comment" onChange="scoreChanged()" style="width:100px" value="' + scb.extras.comment + '"></td><td colspan="5"><input name="extra_runs" value = "' + scb.extras.Runs + '"></td></tr><tr><td>Total</td><td><input name="total_comment" onChange="scoreChanged()" style="width:100px" value = "' + scb.total.comment + '" ></td><td><input name="total_runs" onChange="scoreChanged()" value = "' + scb.total.Runs + '"></td><td colspan="4"><input name="extra_runs_comment" onChange="scoreChanged()" value = "' + scb.total.RunRate + '" style="width:100px"></td></tr>';
+						
+				}else{
+					batting_table = batting_table + '<tr><td>Extras</td><td><input name="extra_comment" onChange="scoreChanged()" style="width:100px"></td><td colspan="5"><input name="extra_runs" onChange="scoreChanged()"></td></tr><tr><td>Total</td><td><input name="total_comment" onChange="scoreChanged()" style="width:100px"></td><td><input name="total_runs" onChange="scoreChanged()"></td><td colspan="4"><input name="extra_runs_comment" onChange="scoreChanged()" style="width:100px"></td></tr>';
+				}
+				batting_table = batting_table + '</table></div>';
+			}
+
+			for(var prop1 in ballinfo){
+				bowlerinfo = ballinfo[prop1];
+				var bowling_table = '<h3>Bowling</h3><div class="matchDetails"><table><tr><th>Player</th><th>Overs</th><th>Maidens</th><th>Runs</th><th>Wickets</th><th>Econ Rate</th><th>Bowling</th></tr>';
+				for(var i=0;i<bowlerinfo.length;i++){
+					if(scb && bowlerinfo.length == scb.bowling_info.bowler_info.length){
+						var bowler = "";
+						if(scb.match_bowler == bowlerinfo[i].playerId)
+							bowler = "checked";
+						bowling_table = bowling_table + '<tr><td>' + bowlerinfo[i].playerName + '<input type="hidden" name="bowlingPlayers[]" value="' + bowlerinfo[i].playerId + '"><input type="hidden" name="bowlingPlayerNames[]" value="' + bowlerinfo[i].playerName + '"></td><td><input type="text" name="overs[]" onChange="scoreChanged()" value="' + scb.bowling_info.bowler_info[i].bowler_bowling_info.Overs + '"></td><td><input type="text" class="matchScore" name="maidens[]" onChange="scoreChanged()" value="' + scb.bowling_info.bowler_info[i].bowler_bowling_info.Maidens + '"></td><td><input type="text" class="matchScore" name="bruns[]" onChange="scoreChanged()" value="' + scb.bowling_info.bowler_info[i].bowler_bowling_info.Runs + '"></td><td><input type="text" class="matchScore" name="wickets[]" onChange="scoreChanged()" value="' + scb.bowling_info.bowler_info[i].bowler_bowling_info.Wickets + '"></td><td><input type="text" class="matchScore" name="econ[]" onChange="scoreChanged()" value="' + scb.bowling_info.bowler_info[i].bowler_bowling_info.EconemyRates + '"></td><td><input type="radio" class="matchScore" name="bowling" onChange="scoreChanged()" value="' + bowlerinfo[i].playerId + '" ' + bowler + '></td></tr>';
+							
+						
+					}else{
+						bowling_table = bowling_table + '<tr><td>' + bowlerinfo[i].playerName + '<input type="hidden" name="bowlingPlayers[]" value="' + bowlerinfo[i].playerId + '"><input type="hidden" name="bowlingPlayerNames[]" value="' + bowlerinfo[i].playerName + '"></td><td><input type="text" name="overs[]" onChange="scoreChanged()" value="0"></td><td><input type="text" class="matchScore" name="maidens[]" onChange="scoreChanged()" value="0"></td><td><input type="text" class="matchScore" name="bruns[]" onChange="scoreChanged()" value="0"></td><td><input type="text" class="matchScore" name="wickets[]" onChange="scoreChanged()" value="0"></td><td><input type="text" class="matchScore" name="econ[]" onChange="scoreChanged()" value="0"></td><td><input type="radio" class="matchScore" name="bowling" value="' + bowlerinfo[i].playerId + '"></td></tr>';
+					}
+				}
+			}
+			Scoreboard_content = Scoreboard_content + batting_table + bowling_table + '</form>';
+			$(".middleContentBottom").html(Scoreboard_content)
+		}
+		function scoreChanged(){
+			// console.log($("#ScoreboardData").serializeArray());
+			// $("#ScoreboardData").submit();
+		    var o = {};
+		    var a = $("#ScoreboardData").serializeArray();
+		    $.each(a, function() {
+		        if (o[this.name] !== undefined) {
+		            if (!o[this.name].push) {
+		                o[this.name] = [o[this.name]];
+		            }
+		            o[this.name].push(this.value || '');
+		        } else {
+		            o[this.name] = this.value || '';
+		        }
+		    });
+		    console.log(o);
+		    $.ajax({
+		    	url : '/scoreboard',
+		    	type : 'POST',
+		    	data : o,
+		    	success : function(data){
+		    		console.log("sent success")
+		    	}
+		    })
+		}
+		</script>
+		<style>
+		input{
+			width:30px;
+		}
+		td{
+			padding: 5px 20px;
+		}
+		</style>
+	</head>
+	<body>
+		<div class="logOut" style="float:right"><a href="/logOut">LogOut</a></div>
+		<div class="header"><h2>Admin Login</h2></div>
+		<div class="leftSidebar">
+			<div class="menu_simple">
+				<ul>
+					<li><a href="/viewMatch">View Match</a></li>
+					<li><a href="/scoreboard">Scoreboard</a></li>
+					<li><a href="/manOfTheMatch">Man of the Match</a></li>
+					<li><a href="#">Match Cancellation</a></li>
+				</ul>
+			</div>
+		</div>
+		<div class="content">
+			<div class="topSide">
+				Select Match : 
+				<span class="matches_dropdown" style="margin-left:10px">
+				</span>
+			</div>
+			<div class="middleContent">
+				<div class="middleContentTop">
+				</div>
+				<div class="middleContentBottom">
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

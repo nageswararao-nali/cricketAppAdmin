@@ -1,0 +1,197 @@
+<html>
+<head>
+	<script type="text/javascript" src="/socket.io/socket.io.js"></script>
+	<script type="text/javascript" src="/scripts/jquery-1.11.1.min.js"></script>
+	<style>
+		#test{
+			width: 600px;
+			padding-left: 150px;
+		}
+		.score_board{
+			width:100%;
+		}
+		.bowler_score_board{
+			width:100%;
+			margin-top:30px;
+		}
+		.batting_stat_info{
+			width:100%;
+			margin-top:30px;
+		}
+		.bowling_stats{
+			width:100%;
+			margin-top:30px;
+		} 
+		.header_row{
+			background-color: grey;
+		}
+		.head{
+			float: left;
+			margin-left: 10px;
+			color:blue;
+		}
+		.head_heading{
+			font-weight: bold;
+			color:black;
+		}
+		.stat_info{
+			margin-top:70px;
+		}
+		.stat_header{
+			margin-bottom:20px;
+		}
+		ul{
+			list-style-type: none
+		}
+		li{
+			margin:5px;
+		}
+		li a{
+			text-decoration: none
+		}
+		.left_side{
+			float:left;
+			width:25%;
+		}
+		.right_side{
+			float:left;
+			position: fixed;
+			margin-left: 25%;
+		}
+		.player_approve{
+			float:left;
+		}
+		.player_update{
+			float:right;
+		}
+	</style>
+	<script>
+	$(document).ready(function(){
+		var loc = window.location.href.split("/");
+		// var loc1 = loc[3]+'/'+loc[4];
+		var locc = loc[4];
+		// console.log(locc);
+		// console.log("---" + loc + "---")
+		var socket = io.connect("http://localhost:3003");
+		// socket.emit("getPlayersList","");
+		socket.emit("getPlayersCountryList","");
+		socket.on("getPlayersList",function(playerList){
+			console.log("in on")
+			console.log(playerList.length)
+			var list = "<ul>";
+			for(var i=0;i<playerList.length;i++){
+				list = list + "<li><a href='javascript:void(0)' onClick='getStats(" + playerList[i].playerId + ")' data='" + playerList[i].playerId + "' class='player_list'>" + playerList[i].fullname + "</a></li>";
+			}
+			list = list + "</ul>";
+			$(".left_side").html(list);
+		});
+		socket.on("getPlayersCountryList",function(playerCountry){
+			console.log("in on")
+			console.log(playerCountry.length)
+			console.log(playerCountry)
+			var list = "Select Country : <select id='country' onChange=getCountryPlayers(this)><option value=''>Select Country</option>";
+			for(var i=0;i<playerCountry.length;i++){
+				list = list + "<option value='" + playerCountry[i] + "'>" + playerCountry[i] + "</option>";
+			}
+			list = list + "</select>";
+			$(".top_side").html(list);
+		});
+		socket.on("playerUpdated",function(playerCountry){
+			alert("player updated")
+			$(".player_ok").val('')
+		});
+		socket.on("playerApproved",function(playerCountry){
+			alert("player approved")
+		});
+		/*$("#getStat").click(function(){
+			var player_name = $("#player_name").val()
+			socket.emit("getPlayerStat",player_name)
+			$("#player_name").val("")
+		})*/
+		$(".stat_info").delegate("input","click",function(){
+			console.log("in selector")
+			alert($(this).attr("data"))
+		})
+		socket.on("playerStat",function(stat_info){
+			var stat_content = "";
+			console.log(stat_info.length)
+			for(var i=0;i<stat_info.length;i++){
+				stat_content = stat_content + "<div class='stat_info'>";
+				stat_content = stat_content + "<div class='stat_header'><span class='head'><span class='head_heading'>Player Id : </span>" + stat_info[i].playerId + "</span><span class='head'><span class='head_heading'>First Name :</span> " + stat_info[i].firstName + " </span><span class='head'><span class='head_heading'>Last Name :</span> " + stat_info[i].lastName + "</span><span class='head'><span class='head_heading'>Full Name :</span> " + stat_info[i].fullname + " </span><span class='head'><span class='head_heading'>Country : </span>" + stat_info[i].country + "</span></div>";
+				var batting_table = '<table class="batting_stat_info">'
+				var batting_tr = "<tr class='header_row'><td></td><td>Mat</td><td>Inns</td><td>NO</td><td>Runs</td><td>HF</td><td>Ave</td><td>BF</td><td>SR</td><td>100</td><td>50</td><td>4s</td><td>6s</td><td>Ct</td><td>St</td></tr>";
+				for(var prop1 in stat_info[i].batting_info){
+					// console.log(prop + " ==== " + scor_info.batting_info.batsman_info[prop])
+					if(stat_info[i].batting_info[prop1] !== null){
+						batting_tr = batting_tr + '<tr><td>' + prop1 + '</td><td>' + stat_info[i].batting_info[prop1].Matches + '</td><td>' + stat_info[i].batting_info[prop1].Innings + '</td><td>' + stat_info[i].batting_info[prop1].NotOuts + '</td><td>' + stat_info[i].batting_info[prop1].Runs + '</td><td>' + stat_info[i].batting_info[prop1].HighScore + '</td><td>' + stat_info[i].batting_info[prop1].Average + '</td><td>' + stat_info[i].batting_info[prop1].BallsFaced + '</td><td>' + stat_info[i].batting_info[prop1].StrikeRate + '</td><td>' + stat_info[i].batting_info[prop1].Hundreds + '</td><td>' + stat_info[i].batting_info[prop1].Fifties + '</td><td>' + stat_info[i].batting_info[prop1].Fours + '</td><td>' + stat_info[i].batting_info[prop1].Sixes + '</td><td>' + stat_info[i].batting_info[prop1].Catches + '</td><td>' + stat_info[i].batting_info[prop1].Stumpings + '</td></tr>';    
+						
+					}
+					
+				}
+				batting_table = batting_table + batting_tr + "</table>";
+				stat_content = stat_content + batting_table;
+				var bowling_table = '<table class="bowling_stats">'
+				var bowling_tr = "<tr class='header_row'><td></td><td>Mat</td><td>Inns</td><td>Balls</td><td>Runs</td><td>Wkts</td><td>BBI</td><td>BBM</td><td>Ave</td><td>Econ</td><td>SR</td><td>4w</td><td>5w</td><td>10</td><td>Maidens</td></tr>";
+				for(var prop1 in stat_info[i].bowling_info){
+					console.log(prop1 + " ==== " + stat_info[i].bowling_info[prop1])
+					if(stat_info[i].bowling_info[prop1] !== null){
+						bowling_tr = bowling_tr + '<tr><td>' + prop1 + '</td><td>' + stat_info[i].bowling_info[prop1].Matches + '</td><td>' + stat_info[i].bowling_info[prop1].Innings + '</td><td>' + stat_info[i].bowling_info[prop1].Balls + '</td><td>' + stat_info[i].bowling_info[prop1].Runs + '</td><td>' + stat_info[i].bowling_info[prop1].Wickets + '</td><td>' + stat_info[i].bowling_info[prop1].BestInnings + '</td><td>' + stat_info[i].bowling_info[prop1].BestMatches + '</td><td>' + stat_info[i].bowling_info[prop1].BowlingAverage + '</td><td>' + stat_info[i].bowling_info[prop1].EconomyRate + '</td><td>' + stat_info[i].bowling_info[prop1].StrikeRate + '</td><td>' + stat_info[i].bowling_info[prop1].FourWickets + '</td><td>' + stat_info[i].bowling_info[prop1].FiveWickets + '</td><td>' + stat_info[i].bowling_info[prop1].TenWickets + '</td><td>' + stat_info[i].bowling_info[prop1].Maidens + '</td></tr>';   
+						
+					}
+					console.log("99999999999999999") 
+					
+				}
+				bowling_table = bowling_table + bowling_tr + "</table>";
+				stat_content = stat_content + bowling_table + "</div><input type='button' name='player_ok_" + i + "' class='player_approve' id='player_approve_" + i + "' value='Approve' onClick=playerApprove(" + stat_info[i].playerId + ")><input type='button' name='player_ok_" + i + "' class='player_update' id='player_ok_" + i + "' value='Update' onClick=getId(" + stat_info[i].playerId + ")><input type='text' style='margin-right:20px;float:right' name='player_ok_text_" + i + "' class='player_ok' id='player_ok_text_" + stat_info[i].playerId + "'>";
+				// $("#test").html('<p>' + msg + '</p>');
+			// }	
+				console.log("---------------------------")
+			}
+			
+			$(".right_side").html(stat_content);
+			// console.log(stat_info)
+		})
+	})
+	var socket = io.connect("http://localhost:3003");
+	function getId(pid){
+		if($("#player_ok_text_"+pid).val() != ""){
+			var playerOtherInfo = {};
+			playerOtherInfo.pid = pid;
+			playerOtherInfo.purl = $("#player_ok_text_"+pid).val();
+			var socket = io.connect("http://localhost:3003");
+			socket.emit("updatePlayerOtherInfo",playerOtherInfo)
+		}else{
+			alert("Please Enter Player URL")
+		}
+	}
+	function playerApprove(pid){
+		socket.emit("playerApprove",pid)
+	}
+	/*function playerNeedUpdate(pid){
+		socket.emit("playerNeedUpdate",pid)
+	}*/
+	function getStats(pid){
+		socket.emit("getPlayerStat",pid)
+	}
+	function getCountryPlayers(elm){
+		// alert(elm.value)
+		socket.emit("getPlayersList",elm.value)
+	}
+	</script>
+</head>
+	<body>
+		<h1> Player Stats</h1>
+		<!-- <div> Player Name : <input type="text" name="player_name" id="player_name"><input style="margin-left:20px" type="button" id="getStat" value="Get Stats"></div>
+		<div id="test"></div> -->
+		<!-- <form id="form_sub" action="">
+			<textarea type="text" name="chat_text" id="chat_text"></textarea>
+			<input type="submit" name="chat_submit" value="Publish Post" id="chat_submit">
+		</form>
+ -->
+ <div class="main">
+ 	<div class="top_side"></div>
+ 	<div class="left_side"></div>
+ 	<div class="right_side"></div>
+ </div>
+	</body>
+</html>

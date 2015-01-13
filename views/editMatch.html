@@ -1,0 +1,165 @@
+<html>
+	<head>
+		<link href="/scripts/css/style.css" rel="stylesheet">
+		<script type="text/javascript" src="/socket.io/socket.io.js"></script>
+		<script type="text/javascript" src="/scripts/js/jquery-1.11.1.min.js"></script>
+		<script src="/scripts/js/jquery-ui.js"></script>
+        <link href="/scripts/css/jquery-ui.css" type="text/css" rel="stylesheet">
+		<script src="/scripts/js/jquery.datetimepicker.js"></script>
+        <link href="/scripts/css/jquery.datetimepicker.css" type="text/css" rel="stylesheet">
+        <script src="/scripts/js/jquery_validator.js"></script>
+		<script>
+		$(document).ready(function(){
+			var socket = io.connect("http://localhost:3000")
+			// $('.datepicker').val(new Date())
+			
+			$('#datepicker').datetimepicker();
+			// $('#datepicker').val(new Date({{StartDate}}));
+			$('#datepicker1').datetimepicker();
+			// $('#datepicker1').val(new Date({{EndDate}}));
+			$("#editMatch").validate({
+                rules: {
+                    team1Players: {
+                        required : true, 
+                    },
+                    datepicker : {required:true},
+                    datepicker1 : {required:true}
+                },
+                messages : {
+                    team1Players:{required:"select team1 players"}
+                }
+            })
+		})
+		</script>
+	</head>
+	<body>
+		<div class="logOut" style="float:right"><a href="/logOut">LogOut</a></div>
+		<div class="header"><h2>Admin Login</h2></div>
+		<div class="leftSidebar">
+			<div class="menu_simple">
+				<ul>
+					<li><a href="/viewMatch">View Match</a></li>
+					<li><a href="/scoreboard">Scoreboard</a></li>
+					<li><a href="/manOfTheMatch">Man of the Match</a></li>
+					<li><a href="#">Match Cancellation</a></li>
+				</ul>
+			</div>
+		</div>
+		<div class="content">
+			<div class="topSide">
+				<h2>Create Match</h2>
+			</div>
+			<div class="middleContent">
+				<form method="post" action="/editMatch" id="editMatch" name="editMatch">
+					<div class="matchDetails">
+						<span class="matchDetailsData">
+							Match Type :  
+							<input type="hidden" name="matchId" value="{{ matchId }}">
+							<select name="mtype">
+								<option value="odi" {% if (mtype == "odi") %} selected {% endif %}>ODI</option>
+								<option value="test" {% if (mtype == "test") %} selected {% endif %}>Test</option>
+								<option value="twenty20" {% if (mtype == "twenty20") %} selected {% endif %}>Twenty20</option>
+							</select>
+						</span>
+						<span class="matchDetailsData">
+							Series Name : <input name="seriesName" value="{{seriesName}}">
+						</span>
+					</div>
+					<div class="matchDetails">
+						<span class="matchDetailsData">
+							Start Date : <input name="matchStartDate" class="datepicker required" id="datepicker" value="{{ StartDate.getFullYear() }}/{{ StartDate.getMonth()+1 }}/{{ StartDate.getDate() }} {{ StartDate.getHours() }}:{{ StartDate.getMinutes()}}">
+						</span>
+						<span class="matchDetailsData">
+							End Date : <input name="matchEndDate" class="datepicker required"  id="datepicker1" value="{{ EndDate.getFullYear() }}/{{ EndDate.getMonth()+1 }}/{{ EndDate.getDate() }} {{ EndDate.getHours() }}:{{ EndDate.getMinutes()}}">
+						</span>
+					</div>
+					<div class="matchDetails">
+						<div class="teamPlayersList">
+							<div class="teamPlayersListLeft">Team1 :</div>
+							<div class="teamPlayersListRight">
+								 <span class="team1Dropdown">
+									<select name="team1" id="team1" onChange="getTeamPlayers(this,1)">
+										<option value="{{team1Id }}">{{team1Name}}</option>
+									</select>
+								</span> 
+							</div>
+						</div>
+						<div class="teamPlayersList">
+							<div class="teamPlayersListLeft">Team2 :</div>
+							<div class="teamPlayersListRight"> 
+								<span class="team2Dropdown">
+									<select name="team2" id="team2" onChange="getTeamPlayers(this,2)">
+										<option value="{{team2Id }}">{{team2Name}}</option>
+									</select>
+								</span> 
+							</div>
+						</div>
+					</div>
+					<div class="matchDetails">
+						<div class="teamPlayersList">
+							<div class="teamPlayersListLeft">players : </div>
+						 	<div class="teamPlayersListRight team1Players">
+								{% for team in teamInfo %}
+									{% if loop.first %}
+										{% for playerInfo in team["team"+team1Id] %}
+											{% set isInSquad = 0 %}
+											{% for squadTeam in squadInfo %}
+												{% if loop.first %}
+													{% for sPlayerInfo in squadTeam["team"+team1Id] %}
+														{% if (playerInfo.playerId == sPlayerInfo.playerId) %}
+															{% set isInSquad = 1 %}
+														{% endif %}
+													{% endfor %} 
+												{% endif %}
+											{% endfor %}
+											{% if isInSquad %}
+												<div class="teamPlayers">
+												<input name="team1Players[]" type="checkbox" checked value="{{ playerInfo.playerId}}"> {{ playerInfo.playerName }}
+												</div>
+											{% else %}
+												<div class="teamPlayers">
+												<input name="team1Players[]" type="checkbox" value="{{ playerInfo.playerId}}"> {{ playerInfo.playerName }}
+												</div>
+											{% endif %}
+										{% endfor %} 
+									{% endif %}
+								{% endfor %}
+						 	</div>
+						</div>
+						<div class="teamPlayersList">
+							<div class="teamPlayersListLeft">players :</div>
+						 	<div class="teamPlayersListRight team2Players">
+								{% for team in teamInfo %}
+									{% if loop.last %}
+										{% for playerInfo in team["team"+team2Id] %}
+											{% set isInSquad = 0 %}
+											{% for squadTeam in squadInfo %}
+												{% if loop.last %}
+													{% for sPlayerInfo in squadTeam["team"+team2Id] %}
+														{% if (playerInfo.playerId == sPlayerInfo.playerId) %}
+															{% set isInSquad = 1 %}
+														{% endif %}
+													{% endfor %} 
+												{% endif %}
+											{% endfor %}
+											{% if isInSquad %}
+												<div class="teamPlayers">
+												<input name="team2Players[]" type="checkbox" checked value="{{ playerInfo.playerId}}"> {{ playerInfo.playerName }}
+												</div>
+											{% else %}
+												<div class="teamPlayers">
+												<input name="team2Players[]" type="checkbox" value="{{ playerInfo.playerId}}"> {{ playerInfo.playerName }}
+												</div>
+											{% endif %}
+										{% endfor %} 
+									{% endif %}
+								{% endfor %}
+						 	</div>
+						</div>
+					</div>
+					<input type="submit" name="submit" value="Create">
+				</form>
+			</div>
+		</div>
+	</body>
+</html>
