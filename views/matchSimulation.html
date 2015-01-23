@@ -27,41 +27,49 @@
 					else
 						alert("match playing 11 announced")
 				})
-				socket.on("scoreboard",function(scor_info){
-					/*for(var prop in scor_info){
-						console.log(prop + " ==== " + scor_info[prop])
-						// $("#test").html('<p>' + msg + '</p>');
-					}*/
-					console.log(scor_info)
-					console.log(scor_info.matchId)
-					// socket.emit("getFantasyPoints",scor_info.matchId)
-					$("#test").html('<p>' + scor_info.match_name + '</p>')
-					var table = '<table class="score_board">'
-					var tr = "<tr><td colspan=2>Batting</td><td>R</td><td>M</td><td>B</td><td>4s</td><td>6s</td><td>SR</td></tr>";
-					for(var prop in scor_info.batting_info.batsman_info){
-						console.log(prop + " ==== " + scor_info.batting_info.batsman_info[prop])
-						tr = tr + '<tr><td>' + scor_info.batting_info.batsman_info[prop].playerName + '</td>';
-						for(var lprop in scor_info.batting_info.batsman_info[prop].batsman_batting_info){
-							console.log(lprop + " ====== " + scor_info.batting_info.batsman_info[prop].batsman_batting_info[lprop])
-							tr = tr + '<td>' +  scor_info.batting_info.batsman_info[prop].batsman_batting_info[lprop] + '</td>';
+				// socket.emit("getScore",{matchId:1000045})
+				socket.on("scoreboard",function(scoreboard){
+					console.log("innings length is " + scoreboard.length)
+					$("#test").html('<p>' + scoreboard[0].match_name + '</p>')
+					for(var i=0;i<scoreboard.length;i++){
+						var scor_info = scoreboard[i];
+						/*for(var prop in scor_info){
+							console.log(prop + " ==== " + scor_info[prop])
+							// $("#test").html('<p>' + msg + '</p>');
+						}*/
+						console.log(scor_info)
+						// socket.emit("getFantasyPoints",scor_info.matchId)
+						var ind = i+1;
+						$("#test").append("<p class='inningp'>" + scoreboard[i].match_name + "<span class='inningsp'>" + ind + " Innings</span></p>")
+						var table = '<table class="score_board">'
+						var tr = "<tr><th colspan=2>Batting</th><th>R</th><th>M</th><th>B</th><th>4s</th><th>6s</th><th>SR</th></tr>";
+						for(var prop in scor_info.batting_info.batsman_info){
+							// console.log(prop + " ==== " + scor_info.batting_info.batsman_info[prop])
+							tr = tr + '<tr><td>' + scor_info.batting_info.batsman_info[prop].playerName + '</td>';
+							for(var lprop in scor_info.batting_info.batsman_info[prop].batsman_batting_info){
+								// console.log(lprop + " ====== " + scor_info.batting_info.batsman_info[prop].batsman_batting_info[lprop])
+								tr = tr + '<td>' +  scor_info.batting_info.batsman_info[prop].batsman_batting_info[lprop] + '</td>';
+							}
+							tr = tr + '</tr>';
 						}
-						tr = tr + '</tr>';
-					}
-					table = table + tr + '</table>';
-					$("#test").append(table);
-					var table = '<table class="bowler_score_board">'
-					var tr = "<tr><td>Bowling</td><td>O</td><td>M</td><td>R</td><td>W</td><td>Econ</td><td>0s</td><td>4s</td><td>6s</td></tr>";
-					for(var prop in scor_info.bowling_info.bowler_info){
-						console.log(prop + " ==== " + scor_info.bowling_info.bowler_info[prop])
-						tr = tr + '<tr><td>' + scor_info.bowling_info.bowler_info[prop].playerName + '</td>';
-						for(var lprop in scor_info.bowling_info.bowler_info[prop].bowler_bowling_info){
-							console.log(lprop + " ====== " + scor_info.bowling_info.bowler_info[prop].bowler_bowling_info[lprop])
-							tr = tr + '<td>' +  scor_info.bowling_info.bowler_info[prop].bowler_bowling_info[lprop] + '</td>';
+						table = table + tr + '</table>';
+						$("#test").append(table);
+						var table = '<table class="bowler_score_board">'
+						var tr = "<tr><th>Bowling</th><th>O</th><th>M</th><th>R</th><th>W</th><th>Econ</th><th>0s</th><th>4s</th><th>6s</th></tr>";
+						for(var prop in scor_info.bowling_info.bowler_info){
+							// console.log(prop + " ==== " + scor_info.bowling_info.bowler_info[prop])
+							tr = tr + '<tr><td>' + scor_info.bowling_info.bowler_info[prop].playerName + '</td>';
+							for(var lprop in scor_info.bowling_info.bowler_info[prop].bowler_bowling_info){
+								// console.log(lprop + " ====== " + scor_info.bowling_info.bowler_info[prop].bowler_bowling_info[lprop])
+								tr = tr + '<td>' +  scor_info.bowling_info.bowler_info[prop].bowler_bowling_info[lprop] + '</td>';
+							}
+							tr = tr + '</tr>';
 						}
-						tr = tr + '</tr>';
+						table = table + tr + '</table>';
+						$("#test").append(table);
+
 					}
-					table = table + tr + '</table>';
-					$("#test").append(table);
+						
 				})
 				$("#createMatch").click(function(){
 					socket.emit("createLocalMatch",{})
@@ -75,8 +83,10 @@
 				})
 				$("#liveMatch").click(function(){
 					var matchId = $("#matchList").val();
-					if(matchId)
+					if(matchId){
 						socket.emit("liveMatchLocal",{matchId:matchId})
+						$("#liveMatch").prop("disabled",true);
+					}
 					else
 						alert("select match")
 				})
@@ -87,6 +97,35 @@
 				width: 29%;
 				float: left;
 				margin-top: 50px;
+			}
+			#test{
+				width: 800px;
+				float: left;
+				margin-top: 50px;
+			}
+			#test p{
+				font-weight: bold;
+			}
+			.score_board{
+				width:100%;
+				margin-top: 20px;
+			}
+			.bowler_score_board{
+				width:100%;
+				margin-top:30px;
+			}
+			.inningp{
+				background-color: #005555;;
+			}
+			.inningsp{
+				float:right;
+				margin-right:100px;
+			}
+			#test th{
+				background : #d1edff
+			}
+			#test td{
+				height:25px;
 			}
 		</style>
 	</head>

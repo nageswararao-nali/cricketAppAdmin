@@ -1171,15 +1171,7 @@ function buildBowling(matchSquad,mtype,ids){
 								// console.log(batsman_info[j])
 								// console.log("-------------------------------------------------------")
 								getBowlerOvers(bowler_info[j].playerId,function(overs){
-									console.log("in bp loop")
-									var bObj = bowler_info[j].bowler_bowling_info;
-
 									bowllingPlayer.bowler_bowling_info.Overs = overs;
-									/*bowllingPlayer.bowler_bowling_info.Runs = parseInt(bObj.Runs) * 3;
-									bowllingPlayer.bowler_bowling_info.Fours = parseInt(bObj.Fours) * 2;
-									bowllingPlayer.bowler_bowling_info.sixes = parseInt(bObj.sixes) * 2;
-									bowllingPlayer.bowler_bowling_info.EconemyRates = parseInt(bObj.EconemyRates) * 1.5;*/
-									// bowllingPlayer.bowler_bowling_info.Runs = bObj.Runs;
 									bowler_info.splice(j,1);
 									bowler_info.push(bowllingPlayer)
 									j++;

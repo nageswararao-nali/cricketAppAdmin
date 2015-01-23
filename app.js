@@ -219,34 +219,56 @@ chat_room.sockets.on("connection",function(socket){
 		adminHelper.liveMatchLocal(data.matchId)
 		setTimeout(function(){
 			livescore(data.matchId,socket)
+			setInterval(function(){
+				livescore(data.matchId,socket)
+			},2000)
 		},20000)
+
+	})
+	socket.on("getScore",function(data){
+			setInterval(function(){
+				livescore(data.matchId,socket)
+			},4000)
 
 	})
 
 })
 // adminHelper.updateScoreboard()
 function livescore(matchId,socket){
-   var scorearray = [];
-   console.log('match id at livescore '+matchId);
-    client1.get('match_day_'+matchId+'',function(err,matchindex){
+   	var scorearray = [];
+    client1.get('match_day_' + matchId + '',function(err,matchindex){
     if(err){console.log(err)}
-      else
-      {
+  	else{
         if(matchindex>0){
-          console.log('matchindex is '+matchindex);
-          client1.get('scoreboard_'+matchId+'_day_' + matchindex,function (err,res){
-              if(err){console.log('error in getLiveScore '+err)}
-                else
-                {
-                  if(res){
-                    var res = JSON.parse(res);
-                    socket.emit("scoreboard",res);
-
-                    
-                   // console.log('response at getLiveScore '+s.matchId);
-                  }
-                }
-            })
+        	var i=0,n=matchindex;
+        	console.log("index is " + n)
+        	function getScoresLoop(i){
+        		var ind = i+1;
+        		client1.get('scoreboard_'+matchId+'_day_' + ind,function (err,res){
+	              	if(err){console.log('error in getLiveScore '+err)}
+	                else
+	                {
+						if(res){
+							var res = JSON.parse(res);
+							scorearray.push(res)
+							i++;
+							console.log("index length " + i + " === " + n)
+			        		if(i != n)
+			        			getScoresLoop(i)
+			        		else{
+			        			socket.emit("scoreboard",scorearray);
+			        		}
+							// socket.emit("scoreboard",res);
+							// console.log('response at getLiveScore '+s.matchId);
+						}else{
+							console.log("res not found")
+						}
+	                }
+	            })
+        		
+        	}getScoresLoop(i)
+          // console.log('matchindex is '+matchindex);
+          
           /*var i = 1, n = matchindex;
           function index(i){
               redis.get('scoreboard_'+matchId+'_day_'+i,function (err,res){
