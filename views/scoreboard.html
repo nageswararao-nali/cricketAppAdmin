@@ -4,7 +4,8 @@
 		<script type="text/javascript" src="/socket.io/socket.io.js"></script>
 		<script type="text/javascript" src="/scripts/js/jquery-1.11.1.min.js"></script>
 		<script>
-		var matchContent,matchId,teamNo,bowlersData;
+		var matchContent,matchId,teamNo,bowlersData,matchName,matchType;
+		var matchTeam1,matchTeam2;
 		$(document).ready(function(){
 			var socket = io.connect("http://localhost:3000")
 			socket.emit("getMatches","");
@@ -30,7 +31,11 @@
 				$(".matches_dropdown").html(matchesContent)
 			})
 			socket.on("getMatchDetails",function(matchDetails){
+				matchName = matchDetails.matchName;
+				matchType = matchDetails.mtype;
 				matchId = matchDetails.matchId;
+				matchTeam1 = matchDetails.team1Id;
+				matchTeam2 = matchDetails.team2Id;
 				var matchDetailContent = "";
 				matchContent = matchDetails;
 				var matchPrimaryData = matchSquadData = "";
@@ -86,7 +91,7 @@
 				batinfo = matchContent.squadInfo[0]
 				ballinfo = matchContent.squadInfo[1]
 			}
-			Scoreboard_content = Scoreboard_content + '<input type="hidden" name="matchId" value="' + matchContent.matchId + '"><input type="hidden" name="teamNo" value="' + team + '">';
+			Scoreboard_content = Scoreboard_content + '<input type="hidden" name="matchId" value="' + matchContent.matchId + '"><input type="hidden" name="teamNo" value="' + team + '"><input type="hidden" name="matchName" value="' + matchName + '"><input type="hidden" name="matchType" value="' + matchType + '"><input type="hidden" name="bowlingTeamId" value="" id="bowlingTeamId"><input type="hidden" name="battingTeamId" id="battingTeamId" value="">';
 
 			for(var prop in batinfo){
 				batingInfo = batinfo[prop];
@@ -274,6 +279,11 @@
 
 			Scoreboard_content = Scoreboard_content + otherContent + batting_table + bowling_table + '</form>';
 			$(".middleContentBottom").html(Scoreboard_content)
+			$("#battingTeamId").val(team);
+			if(matchTeam1 == team)
+				$("#bowlingTeamId").val(matchTeam2);
+			else
+				$("#bowlingTeamId").val(matchTeam1);
 		}
 		function scoreChanged(){
 			// console.log($("#ScoreboardData").serializeArray());

@@ -40,6 +40,12 @@ app.get("/dashboard",function(req,res){
 	else
 		res.render("index.html",{"status":"UnAuthorized Entry"})
 })
+app.get("/matchSimulation",function(req,res){
+	if(req.session.isUserLoggedIn)
+		res.render("matchSimulation.html")
+	else
+		res.render("index.html",{"status":"UnAuthorized Entry"})
+})
 app.get("/viewMatch",function(req,res){
 	if(req.session.isUserLoggedIn)
 		res.render("viewMatch.html")
@@ -71,6 +77,12 @@ app.get("/createMatch",function(req,res){
 app.get("/scoreboard",function(req,res){
 	if(req.session.isUserLoggedIn)
 		res.render("scoreboard.html",{matchId:req.params.matchId})
+	else
+		res.render("index.html",{"status":"UnAuthorized Entry"})
+})
+app.get("/matchCancellation",function(req,res){
+	if(req.session.isUserLoggedIn)
+		res.render("matchCancellation.html",{matchId:req.params.matchId})
 	else
 		res.render("index.html",{"status":"UnAuthorized Entry"})
 })
@@ -185,6 +197,90 @@ chat_room.sockets.on("connection",function(socket){
 			socket.emit("getScoreboard",JSON.parse(scoreboard));
 		})
 	})
+	socket.on("matchCancelled",function(data){
+		console.log(data.matchId)
+		adminHelper.matchCancelled(data.matchId,data.matchName,function(){
+			socket.emit("matchCancelled",{});
+		})
+	})
+	socket.on("createLocalMatch",function(data){
+		adminHelper.createLocalMatch(function(){
+			console.log("local match saved")
+			socket.emit("createLocalMatch",{})
+		})
+	})
+	socket.on("playingSquadLocal",function(data){
+		console.log(data.matchId);
+		adminHelper.playingSquadLocalMatch(data.matchId,function(status){
+			socket.emit("playingSquadLocal",{statuss:status})
+		})
+	})
+	socket.on("liveMatchLocal",function(data){
+		adminHelper.liveMatchLocal(data.matchId)
+		setTimeout(function(){
+			livescore(data.matchId,socket)
+		},20000)
+
+	})
 
 })
 // adminHelper.updateScoreboard()
+function livescore(matchId,socket){
+   var scorearray = [];
+   console.log('match id at livescore '+matchId);
+    client1.get('match_day_'+matchId+'',function(err,matchindex){
+    if(err){console.log(err)}
+      else
+      {
+        if(matchindex>0){
+          console.log('matchindex is '+matchindex);
+          client1.get('scoreboard_'+matchId+'_day_' + matchindex,function (err,res){
+              if(err){console.log('error in getLiveScore '+err)}
+                else
+                {
+                  if(res){
+                    var res = JSON.parse(res);
+                    socket.emit("scoreboard",res);
+
+                    
+                   // console.log('response at getLiveScore '+s.matchId);
+                  }
+                }
+            })
+          /*var i = 1, n = matchindex;
+          function index(i){
+              redis.get('scoreboard_'+matchId+'_day_'+i,function (err,res){
+              if(err){console.log('error in getLiveScore '+err)}
+                else
+                {
+                  if(res){
+                    var s = JSON.parse(res);
+                    //console.log('s s'+s);
+                    scorearray.push(res);
+                    if(i != n){
+                      i++;
+                      index(i)
+                    }
+                    else
+                    {
+                      
+                    }
+
+                    
+                   // console.log('response at getLiveScore '+s.matchId);
+                  }
+                }
+            })
+
+          }index(i)*/
+
+          
+        }
+        else
+        {
+          client.emit('getLiveScore',"no match");
+        }
+      }
+  })
+
+}

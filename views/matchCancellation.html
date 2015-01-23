@@ -1,4 +1,3 @@
-
 <html>
 	<head>
 		<link href="/scripts/css/style.css" rel="stylesheet">
@@ -6,8 +5,23 @@
 		<script type="text/javascript" src="/scripts/js/jquery-1.11.1.min.js"></script>
 		<script>
 		$(document).ready(function(){
+			$("#matchCancelled").click(function(){
+				var matchId = $("#matchList").val();
+				var matchName = $("#matchList option:selected").text();
+				if(confirm("Are yor sure, you want to cancel match?")){
+					socket.emit("matchCancelled",{matchId:matchId,matchName:matchName});
+				}
+			})
+		})
+		var person = prompt("Please enter password", "");
+		if (person != "nag") {
+		    window.location.assign("/logOut")
+		}else{
 			var socket = io.connect("http://localhost:3000")
 			socket.emit("getMatches","");
+			socket.on("matchCancelled",function(data){
+				alert("match cancelled")
+			})
 			socket.on("getMatches",function(matches){
 				var matcheOptions = "";
 				var matchesContent = '<select name="match" id="matchList" onChange="getMatchDetails(this)"><option value="">--select match --</option>';
@@ -19,19 +33,20 @@
 				$(".matches_dropdown").html(matchesContent)
 			})
 			socket.on("getMatchDetails",function(matchDetails){
+				socket.emit("getMom",{matchId:matchDetails.matchId})
 				var matchDetailContent = "";
 				var matchPrimaryData = matchSquadData = "";
 				var teams = Array();
 				teams.push(matchDetails.team1Id)
 				teams.push(matchDetails.team2Id)
-				matchPrimaryData = matchPrimaryData + '<div class="matchDetails"><span class="matchDetailsData">matchId : ' + matchDetails.matchId + '</span><span class="matchDetailsData">Match Name : ' + matchDetails.matchName + '</span><span class="matchDetailsData">Match Type : ' + matchDetails.mtype + '</span></div><div class="matchDetails"><span class="matchDetailsData">Start Date : ' + matchDetails.StartDate + '</span><span class="matchDetailsData">End Date : ' + matchDetails.EndDate + '</span><span class="matchDetailsData">Series Name : ' + matchDetails.seriesName + '</span></div><div class="matchDetails"><span class="matchDetailsData">Match Url : ' + matchDetails.otherInfo.cricmatchUrl + '</span></div><div class="matchDetails"><div class="teamPlayersList"><div class="teamPlayersListLeft">Team1 :</div><div class="teamPlayersListRight"> ' + matchDetails.team1Name + ' </div></div><div class="teamPlayersList"><div class="teamPlayersListLeft">Team2 :</div><div class="teamPlayersListRight"> ' + matchDetails.team2Name + ' </div></div></div>';
+				matchPrimaryData = matchPrimaryData + '<div class="matchDetails"><span class="matchDetailsData">matchId : ' + matchDetails.matchId + '</span><span class="matchDetailsData">Match Name : ' + matchDetails.matchName + '</span><span class="matchDetailsData">Match Type : ' + matchDetails.mtype + '</span></div><div class="matchDetails"><span class="matchDetailsData">Start Date : ' + matchDetails.StartDate + '</span><span class="matchDetailsData">End Date : ' + matchDetails.EndDate + '</span><span class="matchDetailsData">Series Name : ' + matchDetails.seriesName + '</span></div> <div class="matchDetails"><div class="teamPlayersList"><div class="teamPlayersListLeft">Team1 :</div><div class="teamPlayersListRight"> ' + matchDetails.team1Name + ' </div></div><div class="teamPlayersList"><div class="teamPlayersListLeft">Team2 :</div><div class="teamPlayersListRight"> ' + matchDetails.team2Name + ' </div></div></div>';
 				matchSquadData = matchSquadData + '<div class="matchDetails">';
 				if(matchDetails.squadInfo){
 					for(var i=0;i<matchDetails.squadInfo.length;i++){
 						matchSquadData = matchSquadData + '<div class="teamPlayersList"><div class="teamPlayersListLeft">players :</div><div class="teamPlayersListRight">';
 						var teamIdName = "team" + teams[i];
 						for(var j=0;j<matchDetails.squadInfo[i][teamIdName].length;j++){
-							matchSquadData = matchSquadData + '<div class="teamPlayers" >' + matchDetails.squadInfo[i][teamIdName][j].playerName + '</div>';
+							matchSquadData = matchSquadData + '<div class="teamPlayers" ><input name="manOfTheMatch" type="radio" value="' + matchDetails.squadInfo[i][teamIdName][j].playerId + '" onClick="getManOfTheMatch(this)">' + matchDetails.squadInfo[i][teamIdName][j].playerName + '</div>';
 							console.log(matchDetails.squadInfo[i][teamIdName][j])
 						}
 						matchSquadData = matchSquadData + '</div></div>';
@@ -46,22 +61,15 @@
 				matchDetailContent = matchDetailContent + matchSquadData;
 				$(".middleContent").html(matchDetailContent);
 			})
-			$("#editMatch").click(function(){
-				var matchId = $("#matchList").val();
-				if(matchId){
-					window.location.assign("/editMatch/" + matchId)
-				}else{
-					alert("Select Match to Edit")
-				}
-			})
-			$("#createMatch").click(function(){
-				window.location.assign("/createMatch")
-			})
+
+		}
 			
-		})
 		var socket = io.connect("http://localhost:3000")
 		function getMatchDetails(elm){
 			socket.emit("getMatchDetails",{matchId : elm.value})
+		}
+		function getManOfTheMatch(elm){
+			// alert(elm.value)
 		}
 		</script>
 	</head>
@@ -85,10 +93,7 @@
 				<span class="matches_dropdown" style="margin-left:10px">
 				</span>
 				<span style="margin-left:80px">
-					<input type="button" name="editMatch" id="editMatch" value="Edit Match">
-				</span>
-				<span style="margin-left:100px">
-					<input type="button" name="createMatch" id="createMatch" value="Create Match">
+					<input type="button" name="matchCancelled" id="matchCancelled" value="Match Cancelled">
 				</span>
 			</div>
 			<div class="middleContent">

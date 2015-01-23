@@ -63,14 +63,15 @@
 	</head>
 	<body>
 		<div class="logOut" style="float:right"><a href="/logOut">LogOut</a></div>
-		<div class="header"><h2>Admin Login</h2></div>
+		<div class="header"><h2>Admin</h2></div>
 		<div class="leftSidebar">
 			<div class="menu_simple">
 				<ul>
 					<li><a href="/viewMatch">View Match</a></li>
 					<li><a href="/scoreboard">Scoreboard</a></li>
 					<li><a href="/manOfTheMatch">Man of the Match</a></li>
-					<li><a href="#">Match Cancellation</a></li>
+					<li><a href="/matchCancellation">Match Cancellation</a></li>
+					<li><a href="/matchSimulation">Match Simulation</a></li>
 				</ul>
 			</div>
 		</div>
@@ -102,12 +103,17 @@
 						</span>
 					</div>
 					<div class="matchDetails">
+						<span class="matchDetailsData">
+							Match Url : <input name="matchUrl" class="required" id="matchUrl">
+						</span>
+					</div>
+					<div class="matchDetails">
 						<div class="teamPlayersList">
 							<div class="teamPlayersListLeft">Team1 :</div>
 							<div class="teamPlayersListRight"> <span class="team1Dropdown"></span> </div>
 						</div>
 						<div class="teamPlayersList">
-							<div class="teamPlayersListLeft">Team1 :</div>
+							<div class="teamPlayersListLeft">Team2 :</div>
 							<div class="teamPlayersListRight"> <span class="team2Dropdown"></span> </div>
 						</div>
 					</div>

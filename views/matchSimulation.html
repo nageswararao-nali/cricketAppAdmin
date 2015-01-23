@@ -1,0 +1,128 @@
+<html>
+	<head>
+		<link href="/scripts/css/style.css" rel="stylesheet">
+		<script type="text/javascript" src="/socket.io/socket.io.js"></script>
+		<script type="text/javascript" src="/scripts/js/jquery-1.11.1.min.js"></script>
+		<script>
+			$(document).ready(function(){
+				var socket = io.connect("http://localhost:3000")
+				socket.emit("getMatches","");
+				socket.on("getMatches",function(matches){
+					var matcheOptions = "";
+					var matchesContent = '<select name="match" id="matchList" ><option value="">--select match --</option>';
+					for(var i=0;i<matches.length;i++){
+						matcheOptions = matcheOptions + '<option value="' + matches[i].matchId + '">' + matches[i].matchId + ' ' + matches[i].team1.teamName + ' Vs ' + matches[i].team2.teamName + ' - ' + matches[i].mtype + '</option>'; 
+					}
+					matcheOptions = matcheOptions + '</select>';
+					matchesContent = matchesContent + matcheOptions;
+					$(".matches_dropdown").html(matchesContent)
+				})
+				socket.on("createLocalMatch",function(data){
+					socket.emit("getMatches","");
+					alert("Match Created Successfully")
+				})
+				socket.on("playingSquadLocal",function(data){
+					if(data.statuss)
+						alert("select locally created match")
+					else
+						alert("match playing 11 announced")
+				})
+				socket.on("scoreboard",function(scor_info){
+					/*for(var prop in scor_info){
+						console.log(prop + " ==== " + scor_info[prop])
+						// $("#test").html('<p>' + msg + '</p>');
+					}*/
+					console.log(scor_info)
+					console.log(scor_info.matchId)
+					// socket.emit("getFantasyPoints",scor_info.matchId)
+					$("#test").html('<p>' + scor_info.match_name + '</p>')
+					var table = '<table class="score_board">'
+					var tr = "<tr><td colspan=2>Batting</td><td>R</td><td>M</td><td>B</td><td>4s</td><td>6s</td><td>SR</td></tr>";
+					for(var prop in scor_info.batting_info.batsman_info){
+						console.log(prop + " ==== " + scor_info.batting_info.batsman_info[prop])
+						tr = tr + '<tr><td>' + scor_info.batting_info.batsman_info[prop].playerName + '</td>';
+						for(var lprop in scor_info.batting_info.batsman_info[prop].batsman_batting_info){
+							console.log(lprop + " ====== " + scor_info.batting_info.batsman_info[prop].batsman_batting_info[lprop])
+							tr = tr + '<td>' +  scor_info.batting_info.batsman_info[prop].batsman_batting_info[lprop] + '</td>';
+						}
+						tr = tr + '</tr>';
+					}
+					table = table + tr + '</table>';
+					$("#test").append(table);
+					var table = '<table class="bowler_score_board">'
+					var tr = "<tr><td>Bowling</td><td>O</td><td>M</td><td>R</td><td>W</td><td>Econ</td><td>0s</td><td>4s</td><td>6s</td></tr>";
+					for(var prop in scor_info.bowling_info.bowler_info){
+						console.log(prop + " ==== " + scor_info.bowling_info.bowler_info[prop])
+						tr = tr + '<tr><td>' + scor_info.bowling_info.bowler_info[prop].playerName + '</td>';
+						for(var lprop in scor_info.bowling_info.bowler_info[prop].bowler_bowling_info){
+							console.log(lprop + " ====== " + scor_info.bowling_info.bowler_info[prop].bowler_bowling_info[lprop])
+							tr = tr + '<td>' +  scor_info.bowling_info.bowler_info[prop].bowler_bowling_info[lprop] + '</td>';
+						}
+						tr = tr + '</tr>';
+					}
+					table = table + tr + '</table>';
+					$("#test").append(table);
+				})
+				$("#createMatch").click(function(){
+					socket.emit("createLocalMatch",{})
+				})
+				$("#playingSquad").click(function(){
+					var matchId = $("#matchList").val();
+					if(matchId)
+						socket.emit("playingSquadLocal",{matchId:matchId})
+					else
+						alert("select match")
+				})
+				$("#liveMatch").click(function(){
+					var matchId = $("#matchList").val();
+					if(matchId)
+						socket.emit("liveMatchLocal",{matchId:matchId})
+					else
+						alert("select match")
+				})
+			})
+		</script>
+		<style>
+			.matchButtons{
+				width: 29%;
+				float: left;
+				margin-top: 50px;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="logOut" style="float:right"><a href="/logOut">LogOut</a></div>
+		<div class="header"><h2>Admin - Match Simulation</h2></div>
+		<div class="leftSidebar">
+			<div class="menu_simple">
+				<ul>
+					<li><a href="/viewMatch">View Match</a></li>
+					<li><a href="/scoreboard">Scoreboard</a></li>
+					<li><a href="/manOfTheMatch">Man of the Match</a></li>
+					<li><a href="/matchCancellation">Match Cancellation</a></li>
+					<li><a href="/matchSimulation">Match Simulation</a></li>
+				</ul>
+			</div>
+		</div>
+		<div class="content">
+			<div class="topSide">
+				<div class="matches_dropdown"></div>
+				
+			</div>
+			<div class="middleContent">
+				<div class="matchButtons">
+					<input type="button" name="createMatch" id="createMatch" value="Create Match">
+				</div>
+				<div class="matchButtons">
+					<input type="button" name="playingSquad" id="playingSquad" value="Playing Squad">
+				</div>
+				<div class="matchButtons">
+					<input type="button" name="liveMatch" id="liveMatch" value="Live Match">
+				</div>
+				<div id="test">
+					
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

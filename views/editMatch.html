@@ -41,7 +41,8 @@
 					<li><a href="/viewMatch">View Match</a></li>
 					<li><a href="/scoreboard">Scoreboard</a></li>
 					<li><a href="/manOfTheMatch">Man of the Match</a></li>
-					<li><a href="#">Match Cancellation</a></li>
+					<li><a href="/matchCancellation">Match Cancellation</a></li>
+					<li><a href="/matchSimulation">Match Simulation</a></li>
 				</ul>
 			</div>
 		</div>
@@ -71,6 +72,11 @@
 						</span>
 						<span class="matchDetailsData">
 							End Date : <input name="matchEndDate" class="datepicker required"  id="datepicker1" value="{{ EndDate.getFullYear() }}/{{ EndDate.getMonth()+1 }}/{{ EndDate.getDate() }} {{ EndDate.getHours() }}:{{ EndDate.getMinutes()}}">
+						</span>
+					</div>
+					<div class="matchDetails">
+						<span class="matchDetailsData">
+							Match Url : <input name="matchUrl" class="required" id="matchUrl" value="{{ otherInfo.cricmatchUrl }}">
 						</span>
 					</div>
 					<div class="matchDetails">

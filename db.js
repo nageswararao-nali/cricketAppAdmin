@@ -16,7 +16,8 @@ exports.Match_Shedule = mongoose.model('MatchSchedule' , {
 		"StartDate" : Date,
 		"EndDate" : Date,
 		"team1" : Object,
-		"team2" : Object
+		"team2" : Object,
+		"local" : Boolean
 
 	},"MatchSchedule")
 exports.Team_Info = mongoose.model('TeamInfo' , {
